@@ -13,6 +13,7 @@
     "axios": "^1.3.4",
     "express": "^4.18.2",
     "fluent-ffmpeg": "^2.1.2",
+    "m3u8stream": "^0.8.6",
     "puppeteer": "^19.7.5",
     "tempy": "^3.0.0",
     "tmp": "^0.2.1"

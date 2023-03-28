@@ -1,6 +1,8 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const HLSDownloader = require('./hls-downloader');
+const ffmpeg = require('fluent-ffmpeg');
+var fs = require('fs');
 
 
 // Crea la instancia de la aplicación Express
@@ -102,14 +104,33 @@ app.post('/download-video', async (req, res) => {
 
   try {
     const videoStream = await downloader.start(playlistUrl);
-    res.setHeader('Content-Type', 'video/mp4');
-    res.setHeader('Content-Disposition', 'attachment; filename=output.mp4');
-    videoStream.pipe(res);
+    const outputPath = "output.mp4";
+
+    ffmpeg(videoStream)
+      .videoCodec("libx264")
+      .audioCodec("aac")
+      .format("mp4")
+      .output(outputPath)
+      .on("error", (err) => {
+        console.error("FFmpeg error:", err);
+        res.status(500).send("Error al convertir el video.");
+      })
+      .on("end", () => {
+        console.log("Video conversion complete");
+        res.download(outputPath, "converted_video.mp4", (err) => {
+          if (err) {
+            console.error("Error sending file:", err);
+          }
+          fs.unlinkSync(outputPath);
+        });
+      })
+      .run();
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error downloading video');
+    res.status(500).send("Error downloading video");
   }
 });
+
 
 // Inicia el servidor Express
 const PORT = process.env.PORT || 3000;
